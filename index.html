@@ -20,8 +20,10 @@
     .profit-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: #2e7d32; border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 6px; }
     .btn-save { width: 100%; background: #1a237e; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .btn-save:hover { background: #0d47a1; }
+    .btn-clear { width: 100%; background: #c62828; color: #fff; border: none; padding: 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .history { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-    .history h4 { margin: 0 0 10px 0; color: #1a237e; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .history h4 { margin: 0; color: #1a237e; }
     .history-item { background: #f9f9f9; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
@@ -89,19 +91,25 @@
   <button class="btn-save" id="btnSalvar">Salvar Cálculo</button>
 
   <div class="history">
-    <h4>Cálculos Salvos</h4>
+    <div class="history-header">
+      <h4>Cálculos Salvos</h4>
+    </div>
     <div id="listaHistorico"></div>
+    <button class="btn-clear" id="btnLimpar">Limpar Todo o Histórico</button>
   </div>
 </div>
 
 <script>
-  // Tabela simplificada de custo de frete grátis por peso
   function obterCustoFretePorPeso(peso) {
     if (peso <= 0.5) return 18.90;
     if (peso <= 1.0) return 21.90;
     if (peso <= 2.0) return 24.90;
     if (peso <= 5.0) return 30.90;
     return 40.00;
+  }
+
+  function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   function calcular() {
@@ -114,53 +122,46 @@
     const pctMargem = parseFloat(document.getElementById('margem').value) || 0;
 
     const custoDireto = custo + embalagem;
-
-    // 1. Simulação sem frete grátis (Abaixo de R$ 79)
     const taxaFixaBase = 6.00;
     const divisorAbaixo79 = 1 - ((pctComissao + pctImposto + pctMargem) / 100);
-    let precoSugerido = (custoDireto + freteExtra + taxaFixaBase) / divisorAbaixo79;
     
+    let precoSugerido = (custoDireto + freteExtra + taxaFixaBase) / (divisorAbaixo79 || 1);
     let freteEnvios = 0;
     let taxaFixa = taxaFixaBase;
 
-    // 2. Se a estimativa atingir ou passar de R$ 79, aplica-se a regra de frete grátis por peso
     if (precoSugerido >= 79) {
       taxaFixa = 0;
       freteEnvios = obterCustoFretePorPeso(peso);
-      precoSugerido = (custoDireto + freteExtra + freteEnvios) / divisorAbaixo79;
+      precoSugerido = (custoDireto + freteExtra + freteEnvios) / (divisorAbaixo79 || 1);
     }
 
     const valorComissao = precoSugerido * (pctComissao / 100);
     const valorImposto = precoSugerido * (pctImposto / 100);
     const valorLucro = precoSugerido * (pctMargem / 100);
 
-    // Renderiza os resultados
-    document.getElementById('resPreço').innerText = `R$ ${precoSugerido.toFixed(2)}`;
-    document.getElementById('resComissao').innerText = `R$ ${valorComissao.toFixed(2)}`;
-    document.getElementById('resFrete').innerText = `R$ ${freteEnvios.toFixed(2)}`;
-    document.getElementById('resTaxaFixa').innerText = `R$ ${taxaFixa.toFixed(2)}`;
-    document.getElementById('resImposto').innerText = `R$ ${valorImposto.toFixed(2)}`;
-    document.getElementById('resCustoTotal').innerText = `R$ ${custoDireto.toFixed(2)}`;
-    document.getElementById('resLucro').innerText = `R$ ${valorLucro.toFixed(2)}`;
+    // Apenas atualiza a tela (SEM SALVAR no localStorage)
+    document.getElementById('resPreço').innerText = formatarMoeda(precoSugerido);
+    document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
+    document.getElementById('resFrete').innerText = formatarMoeda(freteEnvios);
+    document.getElementById('resTaxaFixa').innerText = formatarMoeda(taxaFixa);
+    document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
+    document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
+    document.getElementById('resLucro').innerText = formatarMoeda(valorLucro);
   }
 
-  // Atualiza comissão ao trocar tipo de anúncio
+  // Atualização dos inputs (apenas recalculam a visualização)
   document.getElementById('tipoAnuncio').addEventListener('change', (e) => {
     document.getElementById('comissao').value = e.target.value;
     calcular();
   });
 
-  // Eventos de digitação em todos os inputs
   const inputs = document.querySelectorAll('input');
   inputs.forEach(input => input.addEventListener('input', calcular));
 
-  // Função para Salvar o Cálculo
+  // Salvamento EXCLUSIVO via clique no botão
   document.getElementById('btnSalvar').addEventListener('click', () => {
-    const nome = document.getElementById('nomeProduto').value.trim();
-    if (!nome) {
-      alert('Por favor, digite o nome do produto ou kit para salvar.');
-      return;
-    }
+    const nomeInput = document.getElementById('nomeProduto').value.trim();
+    const nome = nomeInput !== "" ? nomeInput : "Produto sem nome";
 
     const itemSalvo = {
       nome: nome,
@@ -176,6 +177,14 @@
     renderizarHistorico();
   });
 
+  // Limpar todo o histórico acumulado com erro
+  document.getElementById('btnLimpar').addEventListener('click', () => {
+    if (confirm("Deseja apagar todos os cálculos salvos?")) {
+      localStorage.removeItem('calculosML');
+      renderizarHistorico();
+    }
+  });
+
   function renderizarHistorico() {
     const container = document.getElementById('listaHistorico');
     const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
@@ -189,7 +198,7 @@
       <div class="history-item">
         <div>
           <strong>${item.nome}</strong><br>
-          <small style="color:#666">${item.data}</small>
+          <small style="color:#666">${item.data || 'Sem data'}</small>
         </div>
         <div style="text-align:right">
           <span style="color:#2e7d32; font-weight:bold">${item.preco}</span><br>
