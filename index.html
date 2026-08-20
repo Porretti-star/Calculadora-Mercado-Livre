@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Preço de Venda</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .resultado {
+      background-color: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    .resultado h3 {
+      margin-top: 0;
+      color: #2e7d32;
+    }
+    .resultado-linha {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .lucro-destaque {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1b5e20;
+      border-top: 1px dashed #a5d6a7;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #1b5e20;
+    }
+    .historico-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .historico-detalhes {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+    }
+    .btn-deletar {
+      background-color: #d32f2f;
+      padding: 5px 10px;
+      font-size: 12px;
+      width: auto;
+      float: right;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Precificação Mercado Livre</h2>
+
+    <div class="form-group">
+      <label for="nomeProduto">Nome do Produto / Kit</label>
+      <input type="text" id="nomeProduto" placeholder="Ex: Ração 10kg" oninput="calcular()">
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="peso">Peso (kg)</label>
+        <input type="number" id="peso" value="0" step="0.1" oninput="calcular()">
+      </div>
+      <div class="form-group">
+        <label for="cmv">CMV / Custo (R$)</label>
+        <input type="number" id="cmv" value="0.00" step="0.01" oninput="calcular()">
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="embalagem">Custo de Embalagem (R$)</label>
+        <input type="number" id="embalagem" value="0.00" step="0.01" oninput="calcular()">
+      </div>
+      <div class="form-group">
+        <label for="anuncio">Anúncio</label>
+        <select id="anuncio" onchange="atualizarComissao()">
+          <option value="11.5">Clássico (11,5%)</option>
+          <option value="16.5">Premium (16,5%)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="comissao">Comissão (%)</label>
+        <input type="number" id="comissao" value="11.5" step="0.1" oninput="calcular()">
+      </div>
+      <div class="form-group">
+        <label for="freteFixo">Frete Fixo (R$)</label>
+        <input type="number" id="freteFixo" value="0.00" step="0.01" oninput="calcular()">
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="taxaFixa">Taxa Fixa (< R$79)</label>
+        <input type="number" id="taxaFixa" value="6.00" step="0.01" oninput="calcular()">
+      </div>
+      <div class="form-group">
+        <label for="imposto">Imposto (%)</label>
+        <input type="number" id="imposto" value="0" step="0.1" oninput="calcular()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="margem">Margem Desejada (%)</label>
+      <!-- MARGEM PADRÃO DEFINIDA EM 20% (Pode ser alterada manualmente na tela) -->
+      <input type="number" id="margem" value="20" step="0.1" oninput="calcular()">
+    </div>
+
+    <!-- PAINEL DE RESULTADOS -->
+    <div class="resultado">
+      <h3>2. Resultado do Cálculo</h3>
+      <div class="resultado-linha">
+        <span>Preço Sugerido:</span>
+        <strong style="color: #2e7d32; font-size: 18px;" id="resPreco">R$ 0,00</strong>
+      </div>
+      <div class="resultado-linha">
+        <span>Comissão ML:</span>
+        <span id="resComissao">R$ 0,00</span>
+      </div>
+      <div class="resultado-linha">
+        <span>Frete / Taxa Aplicada:</span>
+        <span id="resFrete">R$ 0,00</span>
+      </div>
+      <div class="resultado-linha">
+        <span>Imposto:</span>
+        <span id="resImposto">R$ 0,00</span>
+      </div>
+      <div class="resultado-linha">
+        <span>Custo Total (CMV + Emb):</span>
+        <span id="resCusto">R$ 0,00</span>
+      </div>
+      <div class="resultado-linha lucro-destaque">
+        <span>Lucro Estimado:</span>
+        <span id="resLucro">R$ 0,00</span>
+      </div>
+    </div>
+
+    <button onclick="salvarCalculo()">💾 Salvar Cálculo</button>
+  </div>
+
+  <!-- SEÇÃO DE DIRETÓRIO DE CÁLCULOS SALVOS -->
+  <div class="card">
+    <h2>Diretório de Cálculos Salvos</h2>
+    <div id="historicoContainer">
+      <p style="color: #777; font-size: 14px;">Nenhum cálculo salvo ainda.</p>
+    </div>
+  </div>
+
+  <script>
+    function atualizarComissao() {
+      const select = document.getElementById('anuncio');
+      document.getElementById('comissao').value = select.value;
+      calcular();
+    }
+
+    function calcular() {
+      const cmv = parseFloat(document.getElementById('cmv').value) || 0;
+      const embalagem = parseFloat(document.getElementById('embalagem').value) || 0;
+      const comissaoPct = parseFloat(document.getElementById('comissao').value) || 0;
+      const freteFixo = parseFloat(document.getElementById('freteFixo').value) || 0;
+      const taxaFixa = parseFloat(document.getElementById('taxaFixa').value) || 0;
+      const impostoPct = parseFloat(document.getElementById('imposto').value) || 0;
+      const margemPct = parseFloat(document.getElementById('margem').value) || 0;
+
+      const custoDireto = cmv + embalagem;
+      const somaPorcentagens = (comissaoPct + impostoPct + margemPct) / 100;
+
+      // Validação de porcentagens extremas
+      if (somaPorcentagens >= 1) {
+        document.getElementById('resPreco').innerText = "Erro (%)";
+        return null;
+      }
+
+      // Cálculo considerando se há taxa fixa (< 79) ou frete
+      let taxaAplicada = taxaFixa + freteFixo;
+      let precoSugerido = (custoDireto + taxaAplicada) / (1 - somaPorcentagens);
+
+      // Regra de transição caso passe de R$ 79 (removendo taxa fixa de R$ 6 se o frete assumir)
+      if (precoSugerido >= 79 && taxaFixa > 0 && freteFixo === 0) {
+        // Recalcula sem a taxa fixa caso o valor final passe de 79 reais
+        taxaAplicada = freteFixo; 
+        precoSugerido = (custoDireto + taxaAplicada) / (1 - somaPorcentagens);
+      }
+
+      const valorComissao = precoSugerido * (comissaoPct / 100);
+      const valorImposto = precoSugerido * (impostoPct / 100);
+      const lucroEstimado = precoSugerido * (margemPct / 100);
+
+      // Atualiza os campos da tela
+      document.getElementById('resPreco').innerText = `R$ ${precoSugerido.toFixed(2)}`;
+      document.getElementById('resComissao').innerText = `R$ ${valorComissao.toFixed(2)}`;
+      document.getElementById('resFrete').innerText = `R$ ${taxaAplicada.toFixed(2)}`;
+      document.getElementById('resImposto').innerText = `R$ ${valorImposto.toFixed(2)}`;
+      document.getElementById('resCusto').innerText = `R$ ${custoDireto.toFixed(2)}`;
+      document.getElementById('resLucro').innerText = `R$ ${lucroEstimado.toFixed(2)}`;
+
+      return {
+        nome: document.getElementById('nomeProduto').value || 'Produto sem nome',
+        data: new Date().toLocaleString('pt-BR'),
+        cmv,
+        embalagem,
+        comissaoPct,
+        valorComissao,
+        freteFixo,
+        taxaFixa,
+        taxaAplicada,
+        impostoPct,
+        valorImposto,
+        margemPct,
+        lucroEstimado,
+        precoSugerido
+      };
+    }
+
+    function salvarCalculo() {
+      const dados = calcular();
+      if (!dados) {
+        alert("Ajuste as porcentagens antes de salvar!");
+        return;
+      }
+
+      let historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+      historico.unshift(dados); // Adiciona no início da lista
+      localStorage.setItem('calculosML', JSON.stringify(historico));
+
+      alert('Cálculo salvo no diretório!');
+      carregarHistorico();
+    }
+
+    function deletarItem(index) {
+      let historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+      historico.splice(index, 1);
+      localStorage.setItem('calculosML', JSON.stringify(historico));
+      carregarHistorico();
+    }
+
+    function carregarHistorico() {
+      const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+      const container = document.getElementById('historicoContainer');
+
+      if (historico.length === 0) {
+        container.innerHTML = '<p style="color: #777; font-size: 14px;">Nenhum cálculo salvo ainda.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      historico.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="historico-card">
+            <button class="btn-deletar" onclick="deletarItem(${index})">Excluir</button>
+            <h3 style="margin: 0 0 5px 0; font-size: 16px;">${item.nome}</h3>
+            <small style="color: #888;">${item.data}</small>
+            <div class="historico-detalhes" style="margin-top: 10px;">
+              <p style="font-weight: bold; color: #2e7d32; font-size: 15px;">Preço Final: R$ ${item.precoSugerido.toFixed(2)}</p>
+              <p>• <strong>CMV + Embalagem:</strong> R$ ${(item.cmv + item.embalagem).toFixed(2)}</p>
+              <p>• <strong>Comissão (${item.comissaoPct}%):</strong> R$ ${item.valorComissao.toFixed(2)}</p>
+              <p>• <strong>Taxa/Frete:</strong> R$ ${item.taxaAplicada.toFixed(2)}</p>
+              <p>• <strong>Imposto (${item.impostoPct}%):</strong> R$ ${item.valorImposto.toFixed(2)}</p>
+              <p>• <strong>Lucro Líquido (${item.margemPct}%):</strong> <strong style="color: #1b5e20;">R$ ${item.lucroEstimado.toFixed(2)}</strong></p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Carrega o histórico salvo e faz o primeiro cálculo ao abrir
+    window.onload = function() {
+      calcular();
+      carregarHistorico();
+    };
+  </script>
+
+</body>
+</html>
