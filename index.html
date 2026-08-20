@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Mercado Livre</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { background-color: #f5f5f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 450px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #1a237e; margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .full { grid-column: span 2; }
+    label { font-size: 12px; font-weight: bold; color: #333; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    .result-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    .result-box h3 { color: #2e7d32; margin: 0 0 10px 0; font-size: 16px; }
+    .suggested-price { font-size: 20px; font-weight: bold; color: #2e7d32; display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 4px; }
+    .profit-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: #2e7d32; border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 6px; }
+    .btn-save { width: 100%; background: #1a237e; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-save:hover { background: #0d47a1; }
+    .btn-clear { width: 100%; background: #c62828; color: #fff; border: none; padding: 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .history { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+    .history h4 { margin: 0 0 10px 0; color: #1a237e; }
+    .history-item { background: #f9f9f9; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .history-item:hover { background: #f0f4c3; }
+    .history-info { flex-grow: 1; }
+    .history-values { text-align: right; margin-right: 10px; }
+    .btn-delete-item { background: none; border: none; color: #c62828; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+    .btn-delete-item:hover { color: #8e0000; }
+
+    /* Modal / Janela Flutuante */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; }
+    .modal-header h3 { margin: 0; color: #1a237e; font-size: 16px; }
+    .btn-close-modal { background: none; border: none; font-size: 20px; font-weight: bold; cursor: pointer; color: #666; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Calculadora Mercado Livre</h2>
+
+  <div class="grid">
+    <div class="full">
+      <label>Nome do Produto / Kit</label>
+      <input type="text" id="nomeProduto" placeholder="Ex: Gato Bill 2kg">
+    </div>
+    <div>
+      <label>Peso (kg)</label>
+      <input type="number" id="peso" value="2" step="0.1">
+    </div>
+    <div>
+      <label>CMV / Custo (R$)</label>
+      <input type="number" id="custo" value="10.50" step="0.01">
+    </div>
+    <div>
+      <label>Custo Embalagem (R$)</label>
+      <input type="number" id="embalagem" value="1.00" step="0.01">
+    </div>
+    <div>
+      <label>Anúncio</label>
+      <select id="tipoAnuncio">
+        <option value="11.5">Clássico (11.5%)</option>
+        <option value="16.5">Premium (16.5%)</option>
+      </select>
+    </div>
+    <div>
+      <label>Comissão (%)</label>
+      <input type="number" id="comissao" value="11.5" readonly>
+    </div>
+    <div>
+      <label>Frete Extra (R$)</label>
+      <input type="number" id="freteExtra" value="0.00" step="0.01">
+    </div>
+    <div>
+      <label>Imposto (%)</label>
+      <input type="number" id="imposto" value="0" step="0.1">
+    </div>
+    <div>
+      <label>Margem Desejada (%)</label>
+      <input type="number" id="margem" value="20" step="0.1">
+    </div>
+  </div>
+
+  <div class="result-box">
+    <h3>Resultado do Cálculo</h3>
+    <div class="suggested-price">
+      <span>Preço Sugerido:</span>
+      <span id="resPreço">R$ 0,00</span>
+    </div>
+    <div class="detail-row"><span>Comissão ML:</span> <span id="resComissao">R$ 0,00</span></div>
+    <div class="detail-row"><span>Frete Envios:</span> <span id="resFrete">R$ 0,00</span></div>
+    <div class="detail-row"><span>Taxa Fixa (&lt; R$79):</span> <span id="resTaxaFixa">R$ 0,00</span></div>
+    <div class="detail-row"><span>Imposto:</span> <span id="resImposto">R$ 0,00</span></div>
+    <div class="detail-row"><span>Custo Total (CMV + Emb):</span> <span id="resCustoTotal">R$ 0,00</span></div>
+    <div class="profit-row"><span>Lucro Estimado:</span> <span id="resLucro">R$ 0,00</span></div>
+  </div>
+
+  <button class="btn-save" id="btnSalvar">Salvar Cálculo</button>
+
+  <div class="history">
+    <h4>Cálculos Salvos</h4>
+    <div id="listaHistorico"></div>
+    <button class="btn-clear" id="btnLimpar">Limpar Todo o Histórico</button>
+  </div>
+</div>
+
+<!-- Modal para Detalhes do Cálculo Salvo -->
+<div class="modal-overlay" id="modalDetalhes">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalNomeProduto">Detalhes do Produto</h3>
+      <button class="btn-close-modal" id="btnFecharModal">&times;</button>
+    </div>
+    <div class="result-box" style="margin-top:0;">
+      <div class="suggested-price">
+        <span>Preço Sugerido:</span>
+        <span id="modalPreco">R$ 0,00</span>
+      </div>
+      <div class="detail-row"><span>Comissão ML:</span> <span id="modalComissao">R$ 0,00</span></div>
+      <div class="detail-row"><span>Frete Envios:</span> <span id="modalFrete">R$ 0,00</span></div>
+      <div class="detail-row"><span>Taxa Fixa (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
+      <div class="detail-row"><span>Imposto:</span> <span id="modalImposto">R$ 0,00</span></div>
+      <div class="detail-row"><span>Custo Total (CMV + Emb):</span> <span id="modalCustoTotal">R$ 0,00</span></div>
+      <div class="profit-row"><span>Lucro Liquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function obterCustoFretePorPeso(peso) {
+    if (peso <= 0.3) return 19.90;
+    if (peso <= 0.5) return 22.90;
+    if (peso <= 1.0) return 25.90;
+    if (peso <= 2.0) return 27.90;
+    if (peso <= 5.0) return 34.90;
+    if (peso <= 9.0) return 52.90;
+    if (peso <= 13.0) return 74.90;
+    if (peso <= 17.0) return 95.90;
+    if (peso <= 23.0) return 115.90;
+    if (peso <= 30.0) return 135.90;
+    return 135.90;
+  }
+
+  function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function calcular() {
+    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const custo = parseFloat(document.getElementById('custo').value) || 0;
+    const embalagem = parseFloat(document.getElementById('embalagem').value) || 0;
+    const pctComissao = parseFloat(document.getElementById('comissao').value) || 0;
+    const freteExtra = parseFloat(document.getElementById('freteExtra').value) || 0;
+    const pctImposto = parseFloat(document.getElementById('imposto').value) || 0;
+    const pctMargem = parseFloat(document.getElementById('margem').value) || 0;
+
+    const custoDireto = custo + embalagem;
+    const taxaFixaBase = 6.00;
+    const divisorAbaixo79 = 1 - ((pctComissao + pctImposto + pctMargem) / 100);
+    
+    let precoSugerido = (custoDireto + freteExtra + taxaFixaBase) / (divisorAbaixo79 || 1);
+    let freteEnvios = 0;
+    let taxaFixa = taxaFixaBase;
+
+    if (precoSugerido >= 79) {
+      taxaFixa = 0;
+      freteEnvios = obterCustoFretePorPeso(peso);
+      precoSugerido = (custoDireto + freteExtra + freteEnvios) / (divisorAbaixo79 || 1);
+    }
+
+    const valorComissao = precoSugerido * (pctComissao / 100);
+    const valorImposto = precoSugerido * (pctImposto / 100);
+    const valorLucro = precoSugerido * (pctMargem / 100);
+
+    document.getElementById('resPreço').innerText = formatarMoeda(precoSugerido);
+    document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
+    document.getElementById('resFrete').innerText = formatarMoeda(freteEnvios);
+    document.getElementById('resTaxaFixa').innerText = formatarMoeda(taxaFixa);
+    document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
+    document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
+    document.getElementById('resLucro').innerText = formatarMoeda(valorLucro);
+
+    return {
+      preco: formatarMoeda(precoSugerido),
+      comissao: formatarMoeda(valorComissao),
+      frete: formatarMoeda(freteEnvios),
+      taxaFixa: formatarMoeda(taxaFixa),
+      imposto: formatarMoeda(valorImposto),
+      custoTotal: formatarMoeda(custoDireto),
+      lucro: formatarMoeda(valorLucro)
+    };
+  }
+
+  document.getElementById('tipoAnuncio').addEventListener('change', (e) => {
+    document.getElementById('comissao').value = e.target.value;
+    calcular();
+  });
+
+  const inputs = document.querySelectorAll('input');
+  inputs.forEach(input => input.addEventListener('input', calcular));
+
+  // Salva no LocalStorage gravando a estrutura inteira de custos
+  document.getElementById('btnSalvar').addEventListener('click', () => {
+    const nomeInput = document.getElementById('nomeProduto').value.trim();
+    const nome = nomeInput !== "" ? nomeInput : "Produto sem nome";
+
+    const res = calcular();
+
+    const itemSalvo = {
+      id: Date.now(),
+      nome: nome,
+      inputs: {
+        peso: document.getElementById('peso').value,
+        custo: document.getElementById('custo').value,
+        embalagem: document.getElementById('embalagem').value,
+        comissao: document.getElementById('comissao').value,
+        tipoAnuncio: document.getElementById('tipoAnuncio').value,
+        freteExtra: document.getElementById('freteExtra').value,
+        imposto: document.getElementById('imposto').value,
+        margem: document.getElementById('margem').value
+      },
+      detalhes: res,
+      data: new Date().toLocaleDateString('pt-BR')
+    };
+
+    let historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+    historico.push(itemSalvo);
+    localStorage.setItem('calculosML', JSON.stringify(historico));
+
+    renderizarHistorico();
+  });
+
+  function deletarItem(e, id) {
+    e.stopPropagation(); // Evita abrir o modal ao clicar no botão de deletar
+    let historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+    historico = historico.filter(item => item.id !== id);
+    localStorage.setItem('calculosML', JSON.stringify(historico));
+    renderizarHistorico();
+  }
+
+  // Abrir Modal e Carregar Valores no Formulário
+  function abrirDetalhes(id) {
+    const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+    const item = historico.find(i => i.id === id);
+
+    if (!item) return;
+
+    // Recarrega os inputs no formulário principal
+    if (item.inputs) {
+      document.getElementById('nomeProduto').value = item.nome;
+      document.getElementById('peso').value = item.inputs.peso;
+      document.getElementById('custo').value = item.inputs.custo;
+      document.getElementById('embalagem').value = item.inputs.embalagem;
+      document.getElementById('comissao').value = item.inputs.comissao;
+      document.getElementById('tipoAnuncio').value = item.inputs.tipoAnuncio;
+      document.getElementById('freteExtra').value = item.inputs.freteExtra;
+      document.getElementById('imposto').value = item.inputs.imposto;
+      document.getElementById('margem').value = item.inputs.margem;
+      calcular();
+    }
+
+    // Exibe no Modal
+    document.getElementById('modalNomeProduto').innerText = item.nome;
+    document.getElementById('modalPreco').innerText = item.detalhes ? item.detalhes.preco : item.preco;
+    document.getElementById('modalComissao').innerText = item.detalhes ? item.detalhes.comissao : 'R$ 0,00';
+    document.getElementById('modalFrete').innerText = item.detalhes ? item.detalhes.frete : 'R$ 0,00';
+    document.getElementById('modalTaxaFixa').innerText = item.detalhes ? item.detalhes.taxaFixa : 'R$ 0,00';
+    document.getElementById('modalImposto').innerText = item.detalhes ? item.detalhes.imposto : 'R$ 0,00';
+    document.getElementById('modalCustoTotal').innerText = item.detalhes ? item.detalhes.custoTotal : 'R$ 0,00';
+    document.getElementById('modalLucro').innerText = item.detalhes ? item.detalhes.lucro : item.lucro;
+
+    document.getElementById('modalDetalhes').style.display = 'flex';
+  }
+
+  document.getElementById('btnFecharModal').addEventListener('click', () => {
+    document.getElementById('modalDetalhes').style.display = 'none';
+  });
+
+  document.getElementById('modalDetalhes').addEventListener('click', (e) => {
+    if (e.target.id === 'modalDetalhes') {
+      document.getElementById('modalDetalhes').style.display = 'none';
+    }
+  });
+
+  document.getElementById('btnLimpar').addEventListener('click', () => {
+    if (confirm("Deseja apagar todos os cálculos salvos?")) {
+      localStorage.removeItem('calculosML');
+      renderizarHistorico();
+    }
+  });
+
+  function renderizarHistorico() {
+    const container = document.getElementById('listaHistorico');
+    const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
+
+    if (historico.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:#888;">Nenhum cálculo salvo ainda.</p>';
+      return;
+    }
+
+    container.innerHTML = historico.map((item) => `
+      <div class="history-item" onclick="abrirDetalhes(${item.id})">
+        <div class="history-info">
+          <strong>${item.nome}</strong><br>
+          <small style="color:#666">${item.data || 'Sem data'}</small>
+        </div>
+        <div class="history-values">
+          <span style="color:#2e7d32; font-weight:bold">${item.detalhes ? item.detalhes.preco : item.preco}</span><br>
+          <small style="color:#2e7d32">Lucro: ${item.detalhes ? item.detalhes.lucro : item.lucro}</small>
+        </div>
+        <button class="btn-delete-item" onclick="deletarItem(event, ${item.id})" title="Deletar este cálculo">✕</button>
+      </div>
+    `).join('');
+  }
+
+  calcular();
+  renderizarHistorico();
+</script>
+
+</body>
+  </html>
+  
