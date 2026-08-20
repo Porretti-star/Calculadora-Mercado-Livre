@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Mercado Livre</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --primary: #2d3748;
+      --accent: #2b6cb0;
+      --border: #e2e8f0;
+      --result-bg: #e6fffa;
+      --result-border: #319795;
+      --result-text: #22543d;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--primary);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input[readonly] {
+      background-color: #edf2f7;
+      color: #4a5568;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      background-color: var(--result-bg);
+      border: 1px solid var(--result-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .result-box h2 {
+      border-bottom: 1px dashed var(--result-border);
+      color: var(--result-text);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .result-row.highlight {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--result-text);
+      margin-bottom: 12px;
+    }
+
+    .info-text {
+      font-size: 0.75rem;
+      color: #718096;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>1. Dados do Produto / Kit</h2>
+
+  <div class="form-group">
+    <label for="nome">Nome do Produto / Kit</label>
+    <input type="text" id="nome" placeholder="Ex: Gato Bill 10x2kg">
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="peso">Peso (kg)</label>
+      <input type="number" id="peso" step="0.1" value="2" oninput="calcular()">
+    </div>
+    <div class="form-group">
+      <label for="cmv">CMV / Custo (R$)</label>
+      <input type="number" id="cmv" step="0.01" value="10.50" oninput="calcular()">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="embalagem">Embalagem (R$)</label>
+      <input type="number" id="embalagem" step="0.01" value="0.00" oninput="calcular()">
+    </div>
+    <div class="form-group">
+      <label for="tipoAnuncio">Anúncio</label>
+      <select id="tipoAnuncio" onchange="atualizarComissao()">
+        <option value="11.5">Clássico (11.5%)</option>
+        <option value="16.5">Premium (16.5%)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="comissao">Comissão (%)</label>
+      <input type="number" id="comissao" step="0.1" value="11.5" oninput="calcular()">
+    </div>
+    <div class="form-group">
+      <label for="frete">Frete Fixo (R$)</label>
+      <input type="number" id="frete" step="0.01" value="0.00" readonly>
+      <div class="info-text" id="freteInfo">Auto por peso</div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="taxaFixa">Taxa Fixa (&lt; R$79)</label>
+      <input type="number" id="taxaFixa" step="0.01" value="6.00" oninput="calcular()">
+    </div>
+    <div class="form-group">
+      <label for="imposto">Imposto (%)</label>
+      <input type="number" id="imposto" step="0.1" value="0" oninput="calcular()">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="margem">Margem Desejada (%)</label>
+    <input type="number" id="margem" step="0.1" value="20.0" oninput="calcular()">
+  </div>
+
+  <div class="result-box">
+    <h2>2. Resultado do Cálculo</h2>
+    <div class="result-row highlight">
+      <span>Preço Sugerido:</span>
+      <span id="resPreco">R$ 0,00</span>
+    </div>
+    <div class="result-row">
+      <span>Comissão ML:</span>
+      <span id="resComissao">R$ 0,00</span>
+    </div>
+    <div class="result-row">
+      <span>Frete Aplicado:</span>
+      <span id="resFrete">R$ 0,00</span>
+    </div>
+    <div class="result-row">
+      <span>Imposto:</span>
+      <span id="resImposto">R$ 0,00</span>
+    </div>
+    <div class="result-row">
+      <span>Custo Total:</span>
+      <span id="resCustoTotal">R$ 0,00</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function obterFretePorPeso(peso) {
+    if (peso <= 0.5) return 20.90;
+    if (peso <= 1.0) return 22.90;
+    if (peso <= 2.0) return 24.90;
+    if (peso <= 5.0) return 31.90;
+    if (peso <= 9.0) return 45.90;
+    if (peso <= 13.0) return 62.90;
+    if (peso <= 17.0) return 77.90;
+    if (peso <= 23.0) return 94.90;
+    return 109.90; // até 30kg
+  }
+
+  function atualizarComissao() {
+    const sel = document.getElementById('tipoAnuncio');
+    document.getElementById('comissao').value = sel.value;
+    calcular();
+  }
+
+  function calcular() {
+    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const cmv = parseFloat(document.getElementById('cmv').value) || 0;
+    const embalagem = parseFloat(document.getElementById('embalagem').value) || 0;
+    const comissaoPct = (parseFloat(document.getElementById('comissao').value) || 0) / 100;
+    const taxaFixaConfig = parseFloat(document.getElementById('taxaFixa').value) || 0;
+    const impostoPct = (parseFloat(document.getElementById('imposto').value) || 0) / 100;
+    const margemPct = (parseFloat(document.getElementById('margem').value) || 0) / 100;
+
+    const freteTabela = obterFretePorPeso(peso);
+    const custoBase = cmv + embalagem;
+    const somaAliquotas = comissaoPct + impostoPct + margemPct;
+
+    if (somaAliquotas >= 1) {
+      document.getElementById('resPreco').innerText = "Erro (Margem Alta)";
+      return;
+    }
+
+    // 1. Simulação para produtos abaixo de R$ 79,00
+    let taxaFixaAplicada = taxaFixaConfig;
+    let freteAplicado = 0;
+    let precoSugerido = (custoBase + taxaFixaAplicada) / (1 - somaAliquotas);
+
+    // 2. Se o preço calculado atingir ou passar de R$ 79,00, entra regra de frete grátis
+    if (precoSugerido >= 79.00) {
+      taxaFixaAplicada = 0;
+      freteAplicado = freteTabela;
+      precoSugerido = (custoBase + freteAplicado) / (1 - somaAliquotas);
+    }
+
+    // Atualização dos campos de saída
+    document.getElementById('frete').value = freteAplicado.toFixed(2);
+    document.getElementById('freteInfo').innerText = precoSugerido >= 79.00 
+      ? `Frete grátis (>79)` 
+      : `Pelo comprador (<79)`;
+
+    const valorComissao = precoSugerido * comissaoPct;
+    const valorImposto = precoSugerido * impostoPct;
+    const custoTotal = custoBase + valorComissao + valorImposto + freteAplicado + taxaFixaAplicada;
+
+    document.getElementById('resPreco').innerText = "R$ " + precoSugerido.toFixed(2).replace('.', ',');
+    document.getElementById('resComissao').innerText = "R$ " + valorComissao.toFixed(2).replace('.', ',');
+    document.getElementById('resFrete').innerText = "R$ " + freteAplicado.toFixed(2).replace('.', ',');
+    document.getElementById('resImposto').innerText = "R$ " + valorImposto.toFixed(2).replace('.', ',');
+    document.getElementById('resCustoTotal').innerText = "R$ " + custoTotal.toFixed(2).replace('.', ',');
+  }
+
+  // Inicializa o cálculo na abertura da página
+  calcular();
+</script>
+
+</body>
+      </html>
+      
