@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -49,12 +49,16 @@
       <input type="text" id="nomeProduto" placeholder="Ex: Gato Bill 2kg">
     </div>
     <div>
-      <label>Peso (kg)</label>
-      <input type="number" id="peso" value="2" step="0.1">
-    </div>
-    <div>
       <label>CMV / Custo (R$)</label>
       <input type="number" id="custo" value="10.50" step="0.01">
+    </div>
+    <div>
+      <label>Preço de Venda (R$)</label>
+      <input type="number" id="precoVenda" value="25.55" step="0.01">
+    </div>
+    <div>
+      <label>Peso (kg)</label>
+      <input type="number" id="peso" value="2" step="0.1">
     </div>
     <div>
       <label>Custo Embalagem (R$)</label>
@@ -79,16 +83,12 @@
       <label>Imposto (%)</label>
       <input type="number" id="imposto" value="0" step="0.1">
     </div>
-    <div>
-      <label>Margem Desejada (%)</label>
-      <input type="number" id="margem" value="20" step="0.1">
-    </div>
   </div>
 
   <div class="result-box">
     <h3>Resultado do Cálculo</h3>
     <div class="suggested-price">
-      <span>Preço Sugerido:</span>
+      <span>Preço de Venda:</span>
       <span id="resPreço">R$ 0,00</span>
     </div>
     <div class="detail-row"><span>Comissão ML:</span> <span id="resComissao">R$ 0,00</span></div>
@@ -97,6 +97,7 @@
     <div class="detail-row"><span>Imposto:</span> <span id="resImposto">R$ 0,00</span></div>
     <div class="detail-row"><span>Custo Total (CMV + Emb):</span> <span id="resCustoTotal">R$ 0,00</span></div>
     <div class="profit-row"><span>Lucro Estimado:</span> <span id="resLucro">R$ 0,00</span></div>
+    <div class="detail-row" style="margin-top: 4px;"><span>Margem Efetiva:</span> <span id="resMargemPct">0.0%</span></div>
   </div>
 
   <button class="btn-save" id="btnSalvar">Salvar Cálculo</button>
@@ -117,7 +118,7 @@
     </div>
     <div class="result-box" style="margin-top:0;">
       <div class="suggested-price">
-        <span>Preço Sugerido:</span>
+        <span>Preço de Venda:</span>
         <span id="modalPreco">R$ 0,00</span>
       </div>
       <div class="detail-row"><span>Comissão ML:</span> <span id="modalComissao">R$ 0,00</span></div>
@@ -125,7 +126,8 @@
       <div class="detail-row"><span>Taxa Fixa (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
       <div class="detail-row"><span>Imposto:</span> <span id="modalImposto">R$ 0,00</span></div>
       <div class="detail-row"><span>Custo Total (CMV + Emb):</span> <span id="modalCustoTotal">R$ 0,00</span></div>
-      <div class="profit-row"><span>Lucro Liquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
+      <div class="profit-row"><span>Lucro Líquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
+      <div class="detail-row" style="margin-top: 4px;"><span>Margem Efetiva:</span> <span id="modalMargemPct">0.0%</span></div>
     </div>
   </div>
 </div>
@@ -152,46 +154,47 @@
   function calcular() {
     const peso = parseFloat(document.getElementById('peso').value) || 0;
     const custo = parseFloat(document.getElementById('custo').value) || 0;
+    const precoVenda = parseFloat(document.getElementById('precoVenda').value) || 0;
     const embalagem = parseFloat(document.getElementById('embalagem').value) || 0;
     const pctComissao = parseFloat(document.getElementById('comissao').value) || 0;
     const freteExtra = parseFloat(document.getElementById('freteExtra').value) || 0;
     const pctImposto = parseFloat(document.getElementById('imposto').value) || 0;
-    const pctMargem = parseFloat(document.getElementById('margem').value) || 0;
 
     const custoDireto = custo + embalagem;
-    const taxaFixaBase = 6.00;
-    const divisorAbaixo79 = 1 - ((pctComissao + pctImposto + pctMargem) / 100);
-    
-    let precoSugerido = (custoDireto + freteExtra + taxaFixaBase) / (divisorAbaixo79 || 1);
+    let taxaFixa = 0;
     let freteEnvios = 0;
-    let taxaFixa = taxaFixaBase;
 
-    if (precoSugerido >= 79) {
+    if (precoVenda < 79) {
+      taxaFixa = 6.00;
+      freteEnvios = 0;
+    } else {
       taxaFixa = 0;
       freteEnvios = obterCustoFretePorPeso(peso);
-      precoSugerido = (custoDireto + freteExtra + freteEnvios) / (divisorAbaixo79 || 1);
     }
 
-    const valorComissao = precoSugerido * (pctComissao / 100);
-    const valorImposto = precoSugerido * (pctImposto / 100);
-    const valorLucro = precoSugerido * (pctMargem / 100);
+    const valorComissao = precoVenda * (pctComissao / 100);
+    const valorImposto = precoVenda * (pctImposto / 100);
+    const valorLucro = precoVenda - (custoDireto + valorComissao + valorImposto + taxaFixa + freteEnvios + freteExtra);
+    const margemPct = precoVenda > 0 ? (valorLucro / precoVenda) * 100 : 0;
 
-    document.getElementById('resPreço').innerText = formatarMoeda(precoSugerido);
+    document.getElementById('resPreço').innerText = formatarMoeda(precoVenda);
     document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
     document.getElementById('resFrete').innerText = formatarMoeda(freteEnvios);
     document.getElementById('resTaxaFixa').innerText = formatarMoeda(taxaFixa);
     document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
     document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
     document.getElementById('resLucro').innerText = formatarMoeda(valorLucro);
+    document.getElementById('resMargemPct').innerText = margemPct.toFixed(1) + '%';
 
     return {
-      preco: formatarMoeda(precoSugerido),
+      preco: formatarMoeda(precoVenda),
       comissao: formatarMoeda(valorComissao),
       frete: formatarMoeda(freteEnvios),
       taxaFixa: formatarMoeda(taxaFixa),
       imposto: formatarMoeda(valorImposto),
       custoTotal: formatarMoeda(custoDireto),
-      lucro: formatarMoeda(valorLucro)
+      lucro: formatarMoeda(valorLucro),
+      margemPct: margemPct.toFixed(1) + '%'
     };
   }
 
@@ -203,7 +206,7 @@
   const inputs = document.querySelectorAll('input');
   inputs.forEach(input => input.addEventListener('input', calcular));
 
-  // Salva no LocalStorage gravando a estrutura inteira de custos
+  // Salva no LocalStorage
   document.getElementById('btnSalvar').addEventListener('click', () => {
     const nomeInput = document.getElementById('nomeProduto').value.trim();
     const nome = nomeInput !== "" ? nomeInput : "Produto sem nome";
@@ -216,12 +219,12 @@
       inputs: {
         peso: document.getElementById('peso').value,
         custo: document.getElementById('custo').value,
+        precoVenda: document.getElementById('precoVenda').value,
         embalagem: document.getElementById('embalagem').value,
         comissao: document.getElementById('comissao').value,
         tipoAnuncio: document.getElementById('tipoAnuncio').value,
         freteExtra: document.getElementById('freteExtra').value,
-        imposto: document.getElementById('imposto').value,
-        margem: document.getElementById('margem').value
+        imposto: document.getElementById('imposto').value
       },
       detalhes: res,
       data: new Date().toLocaleDateString('pt-BR')
@@ -235,35 +238,35 @@
   });
 
   function deletarItem(e, id) {
-    e.stopPropagation(); // Evita abrir o modal ao clicar no botão de deletar
+    e.stopPropagation();
     let historico = JSON.parse(localStorage.getItem('calculosML')) || [];
     historico = historico.filter(item => item.id !== id);
     localStorage.setItem('calculosML', JSON.stringify(historico));
     renderizarHistorico();
   }
 
-  // Abrir Modal e Carregar Valores no Formulário
+  // Abrir Modal e Carregar Valores
   function abrirDetalhes(id) {
     const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
     const item = historico.find(i => i.id === id);
 
     if (!item) return;
 
-    // Recarrega os inputs no formulário principal
     if (item.inputs) {
       document.getElementById('nomeProduto').value = item.nome;
       document.getElementById('peso').value = item.inputs.peso;
       document.getElementById('custo').value = item.inputs.custo;
+      if (item.inputs.precoVenda) {
+        document.getElementById('precoVenda').value = item.inputs.precoVenda;
+      }
       document.getElementById('embalagem').value = item.inputs.embalagem;
       document.getElementById('comissao').value = item.inputs.comissao;
       document.getElementById('tipoAnuncio').value = item.inputs.tipoAnuncio;
       document.getElementById('freteExtra').value = item.inputs.freteExtra;
       document.getElementById('imposto').value = item.inputs.imposto;
-      document.getElementById('margem').value = item.inputs.margem;
       calcular();
     }
 
-    // Exibe no Modal
     document.getElementById('modalNomeProduto').innerText = item.nome;
     document.getElementById('modalPreco').innerText = item.detalhes ? item.detalhes.preco : item.preco;
     document.getElementById('modalComissao').innerText = item.detalhes ? item.detalhes.comissao : 'R$ 0,00';
@@ -272,6 +275,7 @@
     document.getElementById('modalImposto').innerText = item.detalhes ? item.detalhes.imposto : 'R$ 0,00';
     document.getElementById('modalCustoTotal').innerText = item.detalhes ? item.detalhes.custoTotal : 'R$ 0,00';
     document.getElementById('modalLucro').innerText = item.detalhes ? item.detalhes.lucro : item.lucro;
+    document.getElementById('modalMargemPct').innerText = item.detalhes && item.detalhes.margemPct ? item.detalhes.margemPct : '0.0%';
 
     document.getElementById('modalDetalhes').style.display = 'flex';
   }
@@ -322,5 +326,4 @@
 </script>
 
 </body>
-  </html>
-  
+</html>
