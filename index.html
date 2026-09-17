@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora Mercado Livre</title>
+  <title>Calculadora Mercado Livre 2026</title>
   <style>
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
     body { background-color: #f5f5f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 450px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #1a237e; margin-bottom: 20px; }
+    .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 480px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #1a237e; margin-bottom: 20px; font-size: 20px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .full { grid-column: span 2; }
     label { font-size: 12px; font-weight: bold; color: #333; display: block; margin-bottom: 4px; }
@@ -41,13 +41,42 @@
 <body>
 
 <div class="container">
-  <h2>Calculadora Mercado Livre</h2>
+  <h2>Calculadora Mercado Livre 2026</h2>
 
   <div class="grid">
     <div class="full">
       <label>Nome do Produto / Kit</label>
       <input type="text" id="nomeProduto" placeholder="Ex: Gato Bill 2kg">
     </div>
+
+    <div class="full">
+      <label>Categoria do Produto</label>
+      <select id="categoriaSelect">
+        <option value="14.0|19.0">Pet Shop (Areia, Rações, Higiene) - 14% / 19%</option>
+        <option value="12.5|17.5">Acessórios Pet (Coleiras, Brinquedos) - 12.5% / 17.5%</option>
+        <option value="14.0|19.0">Casa, Móveis e Decoração - 14% / 19%</option>
+        <option value="13.5|18.5">Ferramentas e Construção - 13.5% / 18.5%</option>
+        <option value="14.0|19.0">Automotivo - 14% / 19%</option>
+        <option value="15.0|20.0">Saúde e Beleza - 15% / 20%</option>
+        <option value="16.0|21.0">Moda e Calçados - 16% / 21%</option>
+        <option value="11.5|16.5">Eletrônicos e Celulares - 11.5% / 16.5%</option>
+        <option value="12.0|17.0">Brinquedos e Jogos - 12% / 17%</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Tipo de Anúncio</label>
+      <select id="tipoAnuncio">
+        <option value="classico">Clássico</option>
+        <option value="premium">Premium (S/ Juros)</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Comissão Aplicada (%)</label>
+      <input type="number" id="comissao" value="14.0" readonly style="background-color: #f0f0f0;">
+    </div>
+
     <div>
       <label>Preço de Custo (R$)</label>
       <input type="number" id="custo" placeholder="0,00" step="0.01">
@@ -65,22 +94,11 @@
       <input type="number" id="embalagem" value="0.00" step="0.01">
     </div>
     <div>
-      <label>Anúncio</label>
-      <select id="tipoAnuncio">
-        <option value="11.5">Clássico (11.5%)</option>
-        <option value="16.5">Premium (16.5%)</option>
-      </select>
-    </div>
-    <div>
-      <label>Comissão (%)</label>
-      <input type="number" id="comissao" value="11.5" readonly>
-    </div>
-    <div>
-      <label>Frete Extra (R$)</label>
+      <label>Frete Extra / Adicional (R$)</label>
       <input type="number" id="freteExtra" value="0.00" step="0.01">
     </div>
     <div>
-      <label>Imposto (%)</label>
+      <label>Imposto / Simples (%)</label>
       <input type="number" id="imposto" value="0" step="0.1">
     </div>
   </div>
@@ -92,8 +110,8 @@
       <span id="resPreço">R$ 0,00</span>
     </div>
     <div class="detail-row"><span>Comissão ML:</span> <span id="resComissao">R$ 0,00</span></div>
-    <div class="detail-row"><span>Frete Envios:</span> <span id="resFrete">R$ 0,00</span></div>
-    <div class="detail-row"><span>Taxa Fixa (&lt; R$79):</span> <span id="resTaxaFixa">R$ 0,00</span></div>
+    <div class="detail-row"><span>Custo de Frete Envios:</span> <span id="resFrete">R$ 0,00</span></div>
+    <div class="detail-row"><span>Taxa Logística / Unid. (&lt; R$79):</span> <span id="resTaxaFixa">R$ 0,00</span></div>
     <div class="detail-row"><span>Imposto:</span> <span id="resImposto">R$ 0,00</span></div>
     <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="resCustoTotal">R$ 0,00</span></div>
     <div class="profit-row"><span>Lucro Estimado:</span> <span id="resLucro">R$ 0,00</span></div>
@@ -123,7 +141,7 @@
       </div>
       <div class="detail-row"><span>Comissão ML:</span> <span id="modalComissao">R$ 0,00</span></div>
       <div class="detail-row"><span>Frete Envios:</span> <span id="modalFrete">R$ 0,00</span></div>
-      <div class="detail-row"><span>Taxa Fixa (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
+      <div class="detail-row"><span>Taxa Logística (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
       <div class="detail-row"><span>Imposto:</span> <span id="modalImposto">R$ 0,00</span></div>
       <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="modalCustoTotal">R$ 0,00</span></div>
       <div class="profit-row"><span>Lucro Líquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
@@ -133,38 +151,57 @@
 </div>
 
 <script>
-  function obterCustoFretePorPeso(peso) {
-    if (peso <= 0) return 0;
-    if (peso <= 0.3) return 19.90;
-    if (peso <= 0.5) return 22.90;
-    if (peso <= 1.0) return 25.90;
-    if (peso <= 2.0) return 27.90;
-    if (peso <= 5.0) return 34.90;
-    if (peso <= 9.0) return 52.90;
-    if (peso <= 13.0) return 74.90;
-    if (peso <= 17.0) return 95.90;
-    if (peso <= 23.0) return 115.90;
-    if (peso <= 30.0) return 135.90;
-    return 135.90;
+  // Tabela oficial de Frete Envios por Faixa de Peso (Com Subsídio Verde/Líder)
+  function obterCustoFreteEfetivo(peso, preco) {
+    if (preco <= 0) return { freteEnvios: 0, taxaLogistica: 0 };
+
+    if (preco < 79.00) {
+      let taxa = 6.00;
+      if (preco >= 19.00) {
+        if (peso <= 0.3) taxa = 5.65;
+        else if (peso <= 0.5) taxa = 5.95;
+        else if (peso <= 1.0) taxa = 6.05;
+        else if (peso <= 2.0) taxa = 6.25;
+        else if (peso <= 5.0) taxa = 6.55;
+        else if (peso <= 9.0) taxa = 8.00;
+        else taxa = 15.00;
+      }
+      return { freteEnvios: 0, taxaLogistica: taxa };
+    } 
+    
+    // Frete grátis obrigatório para o vendedor (Preço >= R$ 79,00)
+    let frete = 20.95;
+    if (peso <= 0.3) frete = 20.95;
+    else if (peso <= 0.5) frete = 22.55;
+    else if (peso <= 1.0) frete = 23.65;
+    else if (peso <= 1.5) frete = 24.65;
+    else if (peso <= 2.0) frete = 24.65;
+    else if (peso <= 3.0) frete = 26.25;
+    else if (peso <= 4.0) frete = 28.35;
+    else if (peso <= 5.0) frete = 30.75;
+    else if (peso <= 9.0) frete = 39.75;
+    else if (peso <= 20.0) frete = 91.15;
+    else frete = 107.05;
+
+    return { freteEnvios: frete, taxaLogistica: 0 };
   }
 
   function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  function limparFormulario() {
-    document.getElementById('nomeProduto').value = "";
-    document.getElementById('custo').value = "";
-    document.getElementById('precoVenda').value = "";
-    document.getElementById('peso').value = "";
-    document.getElementById('embalagem').value = "0.00";
-    document.getElementById('tipoAnuncio').value = "11.5";
-    document.getElementById('comissao').value = "11.5";
-    document.getElementById('freteExtra').value = "0.00";
-    document.getElementById('imposto').value = "0";
+  function atualizarComissaoPorCategoria() {
+    const valSelect = document.getElementById('categoriaSelect').value;
+    const tipoAnuncio = document.getElementById('tipoAnuncio').value;
+    const [classicoVal, premiumVal] = valSelect.split('|');
+    
+    const pct = tipoAnuncio === 'classico' ? classicoVal : premiumVal;
+    document.getElementById('comissao').value = parseFloat(pct).toFixed(1);
   }
 
   function calcular() {
+    atualizarComissaoPorCategoria();
+
     const peso = parseFloat(document.getElementById('peso').value) || 0;
     const custo = parseFloat(document.getElementById('custo').value) || 0;
     const precoVenda = parseFloat(document.getElementById('precoVenda').value) || 0;
@@ -174,28 +211,19 @@
     const pctImposto = parseFloat(document.getElementById('imposto').value) || 0;
 
     const custoDireto = custo + embalagem;
-    let taxaFixa = 0;
-    let freteEnvios = 0;
-
-    if (precoVenda > 0) {
-      if (precoVenda < 79) {
-        taxaFixa = 6.00;
-        freteEnvios = 0;
-      } else {
-        taxaFixa = 0;
-        freteEnvios = obterCustoFretePorPeso(peso);
-      }
-    }
+    const custosFrete = obterCustoFreteEfetivo(peso, precoVenda);
 
     const valorComissao = precoVenda * (pctComissao / 100);
     const valorImposto = precoVenda * (pctImposto / 100);
-    const valorLucro = precoVenda - (custoDireto + valorComissao + valorImposto + taxaFixa + freteEnvios + freteExtra);
+    
+    const custoTotalDeducoes = custoDireto + valorComissao + valorImposto + custosFrete.taxaLogistica + custosFrete.freteEnvios + freteExtra;
+    const valorLucro = precoVenda - custoTotalDeducoes;
     const margemPct = precoVenda > 0 ? (valorLucro / precoVenda) * 100 : 0;
 
     document.getElementById('resPreço').innerText = formatarMoeda(precoVenda);
     document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
-    document.getElementById('resFrete').innerText = formatarMoeda(freteEnvios);
-    document.getElementById('resTaxaFixa').innerText = formatarMoeda(taxaFixa);
+    document.getElementById('resFrete').innerText = formatarMoeda(custosFrete.freteEnvios);
+    document.getElementById('resTaxaFixa').innerText = formatarMoeda(custosFrete.taxaLogistica);
     document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
     document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
     document.getElementById('resLucro').innerText = formatarMoeda(precoVenda > 0 ? valorLucro : 0);
@@ -204,8 +232,8 @@
     return {
       preco: formatarMoeda(precoVenda),
       comissao: formatarMoeda(valorComissao),
-      frete: formatarMoeda(freteEnvios),
-      taxaFixa: formatarMoeda(taxaFixa),
+      frete: formatarMoeda(custosFrete.freteEnvios),
+      taxaFixa: formatarMoeda(custosFrete.taxaLogistica),
       imposto: formatarMoeda(valorImposto),
       custoTotal: formatarMoeda(custoDireto),
       lucro: formatarMoeda(precoVenda > 0 ? valorLucro : 0),
@@ -213,15 +241,12 @@
     };
   }
 
-  document.getElementById('tipoAnuncio').addEventListener('change', (e) => {
-    document.getElementById('comissao').value = e.target.value;
-    calcular();
-  });
+  document.getElementById('categoriaSelect').addEventListener('change', calcular);
+  document.getElementById('tipoAnuncio').addEventListener('change', calcular);
 
   const inputs = document.querySelectorAll('input');
   inputs.forEach(input => input.addEventListener('input', calcular));
 
-  // Salva no LocalStorage
   document.getElementById('btnSalvar').addEventListener('click', () => {
     const nomeInput = document.getElementById('nomeProduto').value.trim();
     const nome = nomeInput !== "" ? nomeInput : "Produto sem nome";
@@ -232,12 +257,13 @@
       id: Date.now(),
       nome: nome,
       inputs: {
+        categoria: document.getElementById('categoriaSelect').value,
+        tipoAnuncio: document.getElementById('tipoAnuncio').value,
         peso: document.getElementById('peso').value,
         custo: document.getElementById('custo').value,
         precoVenda: document.getElementById('precoVenda').value,
         embalagem: document.getElementById('embalagem').value,
         comissao: document.getElementById('comissao').value,
-        tipoAnuncio: document.getElementById('tipoAnuncio').value,
         freteExtra: document.getElementById('freteExtra').value,
         imposto: document.getElementById('imposto').value
       },
@@ -260,7 +286,6 @@
     renderizarHistorico();
   }
 
-  // Abrir Modal e Carregar Valores
   function abrirDetalhes(id) {
     const historico = JSON.parse(localStorage.getItem('calculosML')) || [];
     const item = historico.find(i => i.id === id);
@@ -269,12 +294,12 @@
 
     if (item.inputs) {
       document.getElementById('nomeProduto').value = item.nome;
+      if (item.inputs.categoria) document.getElementById('categoriaSelect').value = item.inputs.categoria;
+      if (item.inputs.tipoAnuncio) document.getElementById('tipoAnuncio').value = item.inputs.tipoAnuncio;
       document.getElementById('peso').value = item.inputs.peso;
       document.getElementById('custo').value = item.inputs.custo;
       document.getElementById('precoVenda').value = item.inputs.precoVenda;
       document.getElementById('embalagem').value = item.inputs.embalagem;
-      document.getElementById('comissao').value = item.inputs.comissao;
-      document.getElementById('tipoAnuncio').value = item.inputs.tipoAnuncio;
       document.getElementById('freteExtra').value = item.inputs.freteExtra;
       document.getElementById('imposto').value = item.inputs.imposto;
       calcular();
@@ -334,11 +359,10 @@
     `).join('');
   }
 
-  // Zera os formulários ao carregar/atualizar a página
-  limparFormulario();
   calcular();
   renderizarHistorico();
 </script>
 
 </body>
-</html>
+        </html>
+        
