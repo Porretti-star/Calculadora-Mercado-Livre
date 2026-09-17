@@ -112,6 +112,7 @@
     <div class="detail-row"><span>Comissão ML:</span> <span id="resComissao">R$ 0,00</span></div>
     <div class="detail-row"><span>Custo de Frete Envios:</span> <span id="resFrete">R$ 0,00</span></div>
     <div class="detail-row"><span>Taxa Logística / Unid. (&lt; R$79):</span> <span id="resTaxaFixa">R$ 0,00</span></div>
+    <div class="detail-row"><span>Frete Extra / Adicional:</span> <span id="resFreteExtra">R$ 0,00</span></div>
     <div class="detail-row"><span>Imposto:</span> <span id="resImposto">R$ 0,00</span></div>
     <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="resCustoTotal">R$ 0,00</span></div>
     <div class="profit-row"><span>Lucro Estimado:</span> <span id="resLucro">R$ 0,00</span></div>
@@ -142,6 +143,7 @@
       <div class="detail-row"><span>Comissão ML:</span> <span id="modalComissao">R$ 0,00</span></div>
       <div class="detail-row"><span>Frete Envios:</span> <span id="modalFrete">R$ 0,00</span></div>
       <div class="detail-row"><span>Taxa Logística (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
+      <div class="detail-row"><span>Frete Extra / Adicional:</span> <span id="modalFreteExtra">R$ 0,00</span></div>
       <div class="detail-row"><span>Imposto:</span> <span id="modalImposto">R$ 0,00</span></div>
       <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="modalCustoTotal">R$ 0,00</span></div>
       <div class="profit-row"><span>Lucro Líquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
@@ -151,7 +153,7 @@
 </div>
 
 <script>
-  // Tabela oficial de Frete Envios por Faixa de Peso (Com Subsídio Verde/Líder)
+  // Tabela oficial de Frete Envios por Faixa de Peso
   function obterCustoFreteEfetivo(peso, preco) {
     if (preco <= 0) return { freteEnvios: 0, taxaLogistica: 0 };
 
@@ -224,6 +226,7 @@
     document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
     document.getElementById('resFrete').innerText = formatarMoeda(custosFrete.freteEnvios);
     document.getElementById('resTaxaFixa').innerText = formatarMoeda(custosFrete.taxaLogistica);
+    document.getElementById('resFreteExtra').innerText = formatarMoeda(freteExtra);
     document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
     document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
     document.getElementById('resLucro').innerText = formatarMoeda(precoVenda > 0 ? valorLucro : 0);
@@ -234,6 +237,7 @@
       comissao: formatarMoeda(valorComissao),
       frete: formatarMoeda(custosFrete.freteEnvios),
       taxaFixa: formatarMoeda(custosFrete.taxaLogistica),
+      freteExtra: formatarMoeda(freteExtra),
       imposto: formatarMoeda(valorImposto),
       custoTotal: formatarMoeda(custoDireto),
       lucro: formatarMoeda(precoVenda > 0 ? valorLucro : 0),
@@ -310,6 +314,7 @@
     document.getElementById('modalComissao').innerText = item.detalhes ? item.detalhes.comissao : 'R$ 0,00';
     document.getElementById('modalFrete').innerText = item.detalhes ? item.detalhes.frete : 'R$ 0,00';
     document.getElementById('modalTaxaFixa').innerText = item.detalhes ? item.detalhes.taxaFixa : 'R$ 0,00';
+    document.getElementById('modalFreteExtra').innerText = item.detalhes && item.detalhes.freteExtra ? item.detalhes.freteExtra : 'R$ 0,00';
     document.getElementById('modalImposto').innerText = item.detalhes ? item.detalhes.imposto : 'R$ 0,00';
     document.getElementById('modalCustoTotal').innerText = item.detalhes ? item.detalhes.custoTotal : 'R$ 0,00';
     document.getElementById('modalLucro').innerText = item.detalhes ? item.detalhes.lucro : item.lucro;
@@ -364,5 +369,5 @@
 </script>
 
 </body>
-        </html>
-        
+  </html>
+  
