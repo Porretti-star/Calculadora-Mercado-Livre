@@ -94,8 +94,8 @@
       <input type="number" id="embalagem" value="0.00" step="0.01">
     </div>
     <div>
-      <label>Frete Extra / Adicional (R$)</label>
-      <input type="number" id="freteExtra" value="0.00" step="0.01">
+      <label>Valor do Frete (R$)</label>
+      <input type="number" id="valorFrete" value="0.00" step="0.01">
     </div>
     <div>
       <label>Imposto / Simples (%)</label>
@@ -110,9 +110,8 @@
       <span id="resPreço">R$ 0,00</span>
     </div>
     <div class="detail-row"><span>Comissão ML:</span> <span id="resComissao">R$ 0,00</span></div>
-    <div class="detail-row"><span>Custo de Frete Envios:</span> <span id="resFrete">R$ 0,00</span></div>
+    <div class="detail-row"><span>Valor do Frete:</span> <span id="resValorFrete">R$ 0,00</span></div>
     <div class="detail-row"><span>Taxa Logística / Unid. (&lt; R$79):</span> <span id="resTaxaFixa">R$ 0,00</span></div>
-    <div class="detail-row"><span>Frete Extra / Adicional:</span> <span id="resFreteExtra">R$ 0,00</span></div>
     <div class="detail-row"><span>Imposto:</span> <span id="resImposto">R$ 0,00</span></div>
     <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="resCustoTotal">R$ 0,00</span></div>
     <div class="profit-row"><span>Lucro Estimado:</span> <span id="resLucro">R$ 0,00</span></div>
@@ -141,9 +140,8 @@
         <span id="modalPreco">R$ 0,00</span>
       </div>
       <div class="detail-row"><span>Comissão ML:</span> <span id="modalComissao">R$ 0,00</span></div>
-      <div class="detail-row"><span>Frete Envios:</span> <span id="modalFrete">R$ 0,00</span></div>
+      <div class="detail-row"><span>Valor do Frete:</span> <span id="modalValorFrete">R$ 0,00</span></div>
       <div class="detail-row"><span>Taxa Logística (&lt; R$79):</span> <span id="modalTaxaFixa">R$ 0,00</span></div>
-      <div class="detail-row"><span>Frete Extra / Adicional:</span> <span id="modalFreteExtra">R$ 0,00</span></div>
       <div class="detail-row"><span>Imposto:</span> <span id="modalImposto">R$ 0,00</span></div>
       <div class="detail-row"><span>Custo Total (Custo + Emb):</span> <span id="modalCustoTotal">R$ 0,00</span></div>
       <div class="profit-row"><span>Lucro Líquido Estimado:</span> <span id="modalLucro">R$ 0,00</span></div>
@@ -153,7 +151,14 @@
 </div>
 
 <script>
-  // Tabela oficial de Frete Envios por Faixa de Peso
+  let freteManualAlterado = false;
+
+  document.getElementById('valorFrete').addEventListener('input', () => {
+    freteManualAlterado = true;
+    calcular();
+  });
+
+  // Tabela de Frete Envios por Faixa de Peso
   function obterCustoFreteEfetivo(peso, preco) {
     if (preco <= 0) return { freteEnvios: 0, taxaLogistica: 0 };
 
@@ -171,7 +176,7 @@
       return { freteEnvios: 0, taxaLogistica: taxa };
     } 
     
-    // Frete grátis obrigatório para o vendedor (Preço >= R$ 79,00)
+    // Frete grátis para vendas >= R$ 79,00
     let frete = 20.95;
     if (peso <= 0.3) frete = 20.95;
     else if (peso <= 0.5) frete = 22.55;
@@ -209,24 +214,29 @@
     const precoVenda = parseFloat(document.getElementById('precoVenda').value) || 0;
     const embalagem = parseFloat(document.getElementById('embalagem').value) || 0;
     const pctComissao = parseFloat(document.getElementById('comissao').value) || 0;
-    const freteExtra = parseFloat(document.getElementById('freteExtra').value) || 0;
     const pctImposto = parseFloat(document.getElementById('imposto').value) || 0;
 
     const custoDireto = custo + embalagem;
     const custosFrete = obterCustoFreteEfetivo(peso, precoVenda);
 
+    const campoValorFrete = document.getElementById('valorFrete');
+    if (!freteManualAlterado) {
+      campoValorFrete.value = custosFrete.freteEnvios.toFixed(2);
+    }
+
+    const valorFreteEfetivo = parseFloat(campoValorFrete.value) || 0;
+
     const valorComissao = precoVenda * (pctComissao / 100);
     const valorImposto = precoVenda * (pctImposto / 100);
     
-    const custoTotalDeducoes = custoDireto + valorComissao + valorImposto + custosFrete.taxaLogistica + custosFrete.freteEnvios + freteExtra;
+    const custoTotalDeducoes = custoDireto + valorComissao + valorImposto + custosFrete.taxaLogistica + valorFreteEfetivo;
     const valorLucro = precoVenda - custoTotalDeducoes;
     const margemPct = precoVenda > 0 ? (valorLucro / precoVenda) * 100 : 0;
 
     document.getElementById('resPreço').innerText = formatarMoeda(precoVenda);
     document.getElementById('resComissao').innerText = formatarMoeda(valorComissao);
-    document.getElementById('resFrete').innerText = formatarMoeda(custosFrete.freteEnvios);
+    document.getElementById('resValorFrete').innerText = formatarMoeda(valorFreteEfetivo);
     document.getElementById('resTaxaFixa').innerText = formatarMoeda(custosFrete.taxaLogistica);
-    document.getElementById('resFreteExtra').innerText = formatarMoeda(freteExtra);
     document.getElementById('resImposto').innerText = formatarMoeda(valorImposto);
     document.getElementById('resCustoTotal').innerText = formatarMoeda(custoDireto);
     document.getElementById('resLucro').innerText = formatarMoeda(precoVenda > 0 ? valorLucro : 0);
@@ -235,9 +245,8 @@
     return {
       preco: formatarMoeda(precoVenda),
       comissao: formatarMoeda(valorComissao),
-      frete: formatarMoeda(custosFrete.freteEnvios),
+      frete: formatarMoeda(valorFreteEfetivo),
       taxaFixa: formatarMoeda(custosFrete.taxaLogistica),
-      freteExtra: formatarMoeda(freteExtra),
       imposto: formatarMoeda(valorImposto),
       custoTotal: formatarMoeda(custoDireto),
       lucro: formatarMoeda(precoVenda > 0 ? valorLucro : 0),
@@ -245,10 +254,12 @@
     };
   }
 
-  document.getElementById('categoriaSelect').addEventListener('change', calcular);
-  document.getElementById('tipoAnuncio').addEventListener('change', calcular);
+  document.getElementById('categoriaSelect').addEventListener('change', () => { freteManualAlterado = false; calcular(); });
+  document.getElementById('tipoAnuncio').addEventListener('change', () => { freteManualAlterado = false; calcular(); });
+  document.getElementById('peso').addEventListener('input', () => { freteManualAlterado = false; calcular(); });
+  document.getElementById('precoVenda').addEventListener('input', () => { freteManualAlterado = false; calcular(); });
 
-  const inputs = document.querySelectorAll('input');
+  const inputs = document.querySelectorAll('input:not(#valorFrete)');
   inputs.forEach(input => input.addEventListener('input', calcular));
 
   document.getElementById('btnSalvar').addEventListener('click', () => {
@@ -268,7 +279,7 @@
         precoVenda: document.getElementById('precoVenda').value,
         embalagem: document.getElementById('embalagem').value,
         comissao: document.getElementById('comissao').value,
-        freteExtra: document.getElementById('freteExtra').value,
+        valorFrete: document.getElementById('valorFrete').value,
         imposto: document.getElementById('imposto').value
       },
       detalhes: res,
@@ -304,17 +315,17 @@
       document.getElementById('custo').value = item.inputs.custo;
       document.getElementById('precoVenda').value = item.inputs.precoVenda;
       document.getElementById('embalagem').value = item.inputs.embalagem;
-      document.getElementById('freteExtra').value = item.inputs.freteExtra;
+      if (item.inputs.valorFrete) document.getElementById('valorFrete').value = item.inputs.valorFrete;
       document.getElementById('imposto').value = item.inputs.imposto;
+      freteManualAlterado = true;
       calcular();
     }
 
     document.getElementById('modalNomeProduto').innerText = item.nome;
     document.getElementById('modalPreco').innerText = item.detalhes ? item.detalhes.preco : item.preco;
     document.getElementById('modalComissao').innerText = item.detalhes ? item.detalhes.comissao : 'R$ 0,00';
-    document.getElementById('modalFrete').innerText = item.detalhes ? item.detalhes.frete : 'R$ 0,00';
+    document.getElementById('modalValorFrete').innerText = item.detalhes ? item.detalhes.frete : 'R$ 0,00';
     document.getElementById('modalTaxaFixa').innerText = item.detalhes ? item.detalhes.taxaFixa : 'R$ 0,00';
-    document.getElementById('modalFreteExtra').innerText = item.detalhes && item.detalhes.freteExtra ? item.detalhes.freteExtra : 'R$ 0,00';
     document.getElementById('modalImposto').innerText = item.detalhes ? item.detalhes.imposto : 'R$ 0,00';
     document.getElementById('modalCustoTotal').innerText = item.detalhes ? item.detalhes.custoTotal : 'R$ 0,00';
     document.getElementById('modalLucro').innerText = item.detalhes ? item.detalhes.lucro : item.lucro;
